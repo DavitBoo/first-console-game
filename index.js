@@ -8,6 +8,7 @@ let rl = readline.createInterface({
 let gameIsOver = false;
 let currentPlayer = 'Player X';
 
+
 let playerXMoves = [
     [0,0,0],
     [0,0,0],
@@ -22,9 +23,11 @@ let playerOMoves = [
 
 
 async function startGame() {
+    let currentGameState = RUNNING;
 
+    console.log()
     while(!gameIsOver) {
-        drawGrid(playerXMoves, playerOMoves)
+        
         let response = await rl.question(`${currentPlayer}, please enter your next move: `)
         let [yMove, xMove] = response.split(',').map(x => Number(x));
         
@@ -38,7 +41,44 @@ async function startGame() {
         currentPlayerMoves[yMove][xMove] = 1;
 
         currentPlayer = currentPlayer === 'Player X' ? 'Player O' : 'Player X'; 
+
+        currentGameState = getNextGameState(playerXMoves, playerOMoves);
+        gameIsOver = [PLAYER_X_WINS, PLAYER_O_WINS, CATS_GAME].includes(currentGameState);
+
+        console.log()
+        drawGrid(playerXMoves, playerOMoves)
+        console.log()
     }
+
+    if (currentGameState === PLAYER_X_WINS) {
+        console.log('Player X is the winner!')
+    }
+
+    if(currentGameState === PLAYER_O_WINS){
+        console.log('Player O is the winner!')
+    }
+
+    if(currentGameState === CATS_GAME){
+        console.log('It\'s a tie!')
+    }
+}
+
+const RUNNING = 'RUNNING';
+const PLAYER_X_WINS = 'PLAYER_X_WINS';
+const PLAYER_O_WINS = 'PLAYER_O_WINS'
+const CATS_GAME = 'CATS_GAME'
+
+function getNextGameState(xMoves, oMoves){
+    let playerXWins = isHorizontalWin(xMoves)
+    let playerOWins = isHorizontalWin(oMoves)
+
+    if(playerXWins) return PLAYER_X_WINS
+    if(playerOWins) return PLAYER_O_WINS
+    return RUNNING
+}
+
+function isHorizontalWin(moves){
+    return moves.some(row => row.every(x => x === 1));
 }
 
 function drawGrid(xMoves, oMoves){
