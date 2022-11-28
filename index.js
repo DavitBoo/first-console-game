@@ -61,6 +61,8 @@ async function startGame() {
     if(currentGameState === CATS_GAME){
         console.log('It\'s a tie!')
     }
+
+    rl.close();
 }
 
 const RUNNING = 'RUNNING';
@@ -69,8 +71,8 @@ const PLAYER_O_WINS = 'PLAYER_O_WINS'
 const CATS_GAME = 'CATS_GAME'
 
 function getNextGameState(xMoves, oMoves){
-    let playerXWins = isHorizontalWin(xMoves)
-    let playerOWins = isHorizontalWin(oMoves)
+    let playerXWins = isHorizontalWin(xMoves) || isVerticalWin(xMoves) || isDiagonalWin(xMoves) || isCornersWin(xMoves) 
+    let playerOWins = isHorizontalWin(oMoves) || isVerticalWin(oMoves) || isDiagonalWin(oMoves) || isCornersWin(oMoves)
 
     if(playerXWins) return PLAYER_X_WINS
     if(playerOWins) return PLAYER_O_WINS
@@ -78,7 +80,21 @@ function getNextGameState(xMoves, oMoves){
 }
 
 function isHorizontalWin(moves){
-    return moves.some(row => row.every(x => x === 1));
+    return moves.some(row => row.every(x => x));
+}
+
+function isVerticalWin(moves){
+    return [0, 1, 2].some(columnNumber => moves.every(row => row[columnNumber]))
+}
+
+function isDiagonalWin(moves) {
+   return (moves[0][0]  && moves[1][1] && moves[2][2]) 
+    || (moves[2][0]  && moves[1][1] && moves[0][2]) 
+
+}
+
+function isCornersWin(params) {
+    retur (moves[0][0] && moves[0][2] && moves[2][2] && moves[2][0])
 }
 
 function drawGrid(xMoves, oMoves){
