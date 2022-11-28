@@ -84,7 +84,8 @@ function isHorizontalWin(moves){
 }
 
 function isVerticalWin(moves){
-    return [0, 1, 2].some(columnNumber => moves.every(row => row[columnNumber]))
+    return [0, 1, 2].some(columnNumber => moves.every(row => row[columnNumber]
+        ))
 }
 
 function isDiagonalWin(moves) {
