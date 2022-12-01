@@ -6,9 +6,8 @@ let rl = readline.createInterface({
 })
 
 let gameIsOver = false;
+
 let currentPlayer = 'Player X';
-
-
 let playerXMoves = [
     [0,0,0],
     [0,0,0],
