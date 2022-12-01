@@ -6,7 +6,7 @@ let rl = readline.createInterface({
     output: process.stdout,
 })
 
-const socket = socketIoClient("http://127.0.0.1:3000")
+const socket = socketIoClient("https://first-console-game.onrender.com/")
 
 
 socket.on("your turn", async () => {
