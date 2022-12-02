@@ -14,8 +14,17 @@ const socket = socketIoClient(serverUrl)
 
 
 socket.on("your turn", async () => {
-    let respone = await rl.question('It is your turn, please enter your next move: ')
-    socket.emit('new move', respone)
+    let inputValid = false;
+    let response;
+    while(!inputValid){
+        response = await rl.question('It is your turn, please enter your next move: ')
+        inputValid = isValidInput(response);
+        if(!inputValid) {
+            console.log('Invalid input, please enter a capital letter followed by a number')
+        }
+    }    
+    socket.emit('new move', response)
+
   });
 
 socket.on('player moves', ({playerXMoves, playerOMoves}) => {
@@ -47,6 +56,13 @@ socket.on('tie', () => {
     rl.close();
     socket.disconnect();
 })
+
+
+function isValidInput(input) {
+    let [letter, number] = input.split('');
+    //estamos comprobando a la inversa a ver si el A,B,C contiene la letra de nuestra variable letter, y lo mismo con number y 1,2,3
+    return ['A', 'B', 'C'].includes(letter) && ['1', '2', '3'].includes(number);
+}
 
 function drawGrid(xMoves, oMoves){
     console.log()
