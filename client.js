@@ -14,7 +14,8 @@ const socket = socketIoClient(serverUrl)
 
 
 socket.on("your turn", async () => {
-    let respone = await rl.question('It\' is your turn, please enter your next move: ')
+    let respone = await rl.question('It is your turn, please enter your next move: ')
+    socket.emit('new move', respone)
   });
 
 socket.on('player moves', ({playerXMoves, playerOMoves}) => {
@@ -23,6 +24,10 @@ socket.on('player moves', ({playerXMoves, playerOMoves}) => {
 
 socket.on('info', message => {
     console.log(message)
+})
+
+socket.on('other player turn', () => {
+    console.log('waiting for the other players input')
 })
 
 function drawGrid(xMoves, oMoves){
