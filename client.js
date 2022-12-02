@@ -30,6 +30,24 @@ socket.on('other player turn', () => {
     console.log('waiting for the other players input')
 })
 
+socket.on('win', () => {
+    console.log('Se acabó la partida, has ganado!')
+    rl.close();
+    socket.disconnect();
+})
+
+socket.on('lose', () => {
+    console.log('Se acabó la partida, has perdido!')
+    rl.close();
+    socket.disconnect();
+})
+
+socket.on('tie', () => {
+    console.log('Se acabó la partida, habeis quedado empate!')
+    rl.close();
+    socket.disconnect();
+})
+
 function drawGrid(xMoves, oMoves){
     console.log()
     drawLNumberLabels(),

@@ -7,7 +7,14 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, { /* options */ });
 
+const RUNNING = 'RUNNING';
+const PLAYER_X_WINS = 'PLAYER_X_WINS';
+const PLAYER_O_WINS = 'PLAYER_O_WINS'
+const CATS_GAME = 'CATS_GAME'
+
 let currentPlayer;
+let gameIsOver = false;
+let currentGameState = RUNNING;
 let playerXMoves = [
     [0,0,0],
     [0,0,0],
@@ -44,7 +51,6 @@ io.on("connection", (socket) => {
 
     socket.on('new move', input  => {
         let[yMove, xMove] = parseInput(input);
-        console.log(currentPlayer)
         let currentPlayerMoves = currentPlayer === 'Player X'
             ? playerXMoves
             : playerOMoves
@@ -58,14 +64,28 @@ io.on("connection", (socket) => {
         playerO.emit('player moves', {playerXMoves, playerOMoves})
 
         currentPlayer = currentPlayer === 'Player X' ? 'Player O' : 'Player X'; 
-        if(currentPlayer === 'Player X'){
-            playerX.emit('your turn')
-            console.log('el x')
-            playerO.emit('other player turn')
-        }else {
-            playerO.emit('your turn')
-            console.log('el O')
-            playerX.emit('other player turn')
+        if(!gameIsOver){
+
+            if(currentPlayer === 'Player X'){
+                playerX.emit('your turn')
+                console.log('el x')
+                playerO.emit('other player turn')
+            }else {
+                playerO.emit('your turn')
+                console.log('el O')
+                playerX.emit('other player turn')
+            }
+        } else{
+            if(currentGameState === PLAYER_X_WINS){
+                playerX.emit('win')
+                playerO.emit('lose')
+            } else if (currentGameState === PLAYER_O_WINS){
+                playerO.emit('win')
+                playerX.emit('lose')
+            } else {
+                playerO.emit('tie')
+                playerX.emit('tie')
+            }
         }
 
     })
@@ -93,6 +113,37 @@ function parseInput(input){
         ['1', '2', '3'].indexOf(number)
     ]
 }
+
+
+function getNextGameState(xMoves, oMoves){
+    let playerXWins = isHorizontalWin(xMoves) || isVerticalWin(xMoves) || isDiagonalWin(xMoves) || isCornersWin(xMoves) 
+    let playerOWins = isHorizontalWin(oMoves) || isVerticalWin(oMoves) || isDiagonalWin(oMoves) || isCornersWin(oMoves)
+
+    if(playerXWins) return PLAYER_X_WINS
+    if(playerOWins) return PLAYER_O_WINS
+    return RUNNING
+}
+
+function isHorizontalWin(moves){
+    return moves.some(row => row.every(x => x));
+}
+
+function isVerticalWin(moves){
+    return [0, 1, 2].some(columnNumber => moves.every(row => row[columnNumber]
+        ))
+}
+
+function isDiagonalWin(moves) {
+   return (moves[0][0]  && moves[1][1] && moves[2][2]) 
+    || (moves[2][0]  && moves[1][1] && moves[0][2]) 
+
+}
+
+function isCornersWin(moves) {
+    return (moves[0][0] && moves[0][2] && moves[2][2] && moves[2][0])
+}
+
+
 
 httpServer.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT} ...`)
