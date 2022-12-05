@@ -96,10 +96,13 @@ function parseInput(input){
 
 function getNextGameState(xMoves, oMoves){
     let playerXWins = isHorizontalWin(xMoves) || isVerticalWin(xMoves) || isDiagonalWin(xMoves) || isCornersWin(xMoves) 
-    let playerOWins = isHorizontalWin(oMoves) || isVerticalWin(oMoves) || isDiagonalWin(oMoves) || isCornersWin(oMoves)
-
     if(playerXWins) return PLAYER_X_WINS
+    
+    let playerOWins = isHorizontalWin(oMoves) || isVerticalWin(oMoves) || isDiagonalWin(oMoves) || isCornersWin(oMoves)
     if(playerOWins) return PLAYER_O_WINS
+    
+    let catsGame = isCatsGame(xMoves, oMoves)
+    if(catsGame) return CATS_GAME
     return RUNNING
 }
 
@@ -120,6 +123,12 @@ function isDiagonalWin(moves) {
 
 function isCornersWin(moves) {
     return (moves[0][0] && moves[0][2] && moves[2][2] && moves[2][0])
+}
+
+function isCatsGame (xMoves, oMoves) {
+    return xMoves.every((row, rowNumber) => 
+        row.every((_, columnNumber) =>
+             xMoves[rowNumber][columnNumber] || oMoves[rowNumber][columnNumber])) 
 }
 
 function drawGrid(xMoves, oMoves){
