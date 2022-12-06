@@ -72,6 +72,14 @@ io.on("connection", (socket) => {
             
         } = game;
         let[yMove, xMove] = parseInput(input);
+
+        if(!positionIsOpen(yMove, xMove, playerXMoves, playerOMoves)){
+            let currentPlayerSocket = game.currentPlayer === 'Player X'
+                ? playerXSocket
+                : playerOSocket
+            return currentPlayerSocket.emit('position taken')
+        }
+
         let currentPlayerMoves = game.currentPlayer === 'Player X'
             ? playerXMoves
             : playerOMoves
@@ -148,6 +156,10 @@ function parseInput(input){
         ['A', 'B', 'C'].indexOf(letter),
         ['1', '2', '3'].indexOf(number)
     ]
+}
+
+function positionIsOpen(row, column, playerXMoves, playerOMoves) {
+    return !playerXMoves[row][column] && !playerOMoves[row][column];
 }
 
 

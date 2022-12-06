@@ -13,23 +13,33 @@ let serverUrl = process.env.IS_DEV
 const socket = socketIoClient(serverUrl)
 
 
-socket.on("your turn", async () => {
+async function getNextMove(prompt) {
     let inputValid = false;
     let response;
     while(!inputValid){
-        response = await rl.question('It is your turn, please enter your next move: ')
+        response = await rl.question(prompt)
         inputValid = isValidInput(response);
         if(!inputValid) {
             console.log('Invalid input, please enter a capital letter followed by a number')
         }
     }    
     socket.emit('new move', response)
+}
+
+socket.on('position taken', () => {
+    console.log('Lo siento, ese posición ya la ha marcado tu contrincante.')
+    getNextMove('Introduce una posición nueva: ')
+})
+
+socket.on("your turn", () => {
+    getNextMove('It is your turn, please enter your next move: ' );
 
   });
 
 socket.on('player moves', ({playerXMoves, playerOMoves}) => {
     drawGrid(playerXMoves, playerOMoves)
 })
+
 
 socket.on('info', message => {
     console.log(message)
