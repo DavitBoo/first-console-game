@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import socketIoClient from 'socket.io-client'
 import * as readline from 'node:readline/promises'
 
@@ -6,11 +8,32 @@ let rl = readline.createInterface({
     output: process.stdout,
 })
 
+
 let serverUrl = process.env.IS_DEV
     ? 'http://127.0.0.1:3000'
     : 'https://first-console-game.onrender.com/'
 
-const socket = socketIoClient(serverUrl)
+let hasId = await rl.question('Do you have an id of a game you want to join? (Y/N)')
+
+let socket;
+
+if(hasId.toUpperCase() === 'Y'){
+    let id = await rl.question('Vale, introduce el id de la partida a la que quieres unirte: ')
+
+    socket = socketIoClient(serverUrl, {
+        query: { gameId: id }
+    })
+} else {
+    let wantsToCreateNewGame = await rl.question('Vale, sin problema, ¿quieres crear una nueva partida con id? (Y/N)')
+    if(wantsToCreateNewGame.toUpperCase() === 'Y') {
+        console.log('just test')
+        socket = socketIoClient(serverUrl, {
+            query: { createNew: true }
+        })
+    } else{
+        socket = socketIoClient(serverUrl)
+    }
+}
 
 
 async function getNextMove(prompt) {
@@ -25,6 +48,12 @@ async function getNextMove(prompt) {
     }    
     socket.emit('new move', response)
 }
+
+socket.on('id not found', () => {
+    console.log('La partida con ese ID no se ha encontrado, prueba de nuevo')
+    socket.disconnect();
+    rl.close(); 
+})
 
 socket.on('position taken', () => {
     console.log('Lo siento, ese posición ya la ha marcado tu contrincante.')

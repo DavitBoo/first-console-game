@@ -1,6 +1,7 @@
 import express from 'express'
 import {createServer} from "http";
 import { Server } from "socket.io";
+import { v4 as uuid } from "uuid"
 
 let app = express();
 const httpServer = createServer(app);
@@ -15,8 +16,9 @@ const WAITING = 'WAITING'
 
 let games = [];
 
-function createNewGame() {
-    return {            
+function createNewGame(id) {
+    return {      
+        id,      
         currentPlayer: null,
         gameIsOver: false,
         currentGameState: WAITING, 
@@ -40,29 +42,59 @@ let nextSocketId = 0;
 io.on("connection", (socket) => {
     let socketId = nextSocketId;
     nextSocketId += 1;
-    let waitingGame = games.find(game => game.currentGameState === 'WAITING')
+    
     let game
 
-    if(waitingGame){
-        game = waitingGame
-        console.log('El segundo jugador de ha unido, comienza el juego...')
-        game.playerOSocket = socket
-        //en vez de hablarle a una sola conxión(jugador), con io. emites a todos los sockets conectados
-        game.playerXSocket.emit('info', `Ya está aquí tu contrincante con Id ${socketId}, comienza la partida... `)
-        game.playerOSocket.emit('info', `Eres el segundo jugador, tu Id es ${socketId} y jugaras contra  el jugador${game.playerXId}, la partida empieza ya...`)
-        game.playerXId = socketId
-             
-        startGame(waitingGame);
-    }else{
-        let newGame = createNewGame();
-        game = newGame
-        console.log('El primer jugador se ha unid, esperando al segundo...')
-        game.playerXSocket = socket
-        game.playerXSocket.emit('info', `Eres el primer jugador, tu ID es ${socketId}, estamos esperando al segundo para dar comienzo a la partida...`)
-        newGame.playerXId = socketId;
-        games.push(game)
+    let {gameId, createNew} = socket.handshake.query;
+
+    if(gameId){
+        let existingGame = games.find(game => game.id === gameId);
+        if (existingGame) {
+            existingGame.playerOSocket = socket;
+            existingGame.playerXSocket.emit('info', `Ya está aquí tu contrincante, comienza la partida... `)
+            existingGame.playerOSocket.emit('info', `Partida encontrada, la partida empieza ya...`)
+            game = existingGame;
+            startGame(game);
+        } else {
+            socket.emit('id not found')
+        }
+    } else if(createNew){
+        let newGameId = uuid();
+        let newGame = createNewGame(newGameId)
+        newGame.playerXSocket = socket;    
+        newGame.playerXSocket.emit('info', `Nueva partida creada, el ID de la partida es ${newGameId}. Comparte este ID con otro jugador.`)
+        games.push(newGame)
+        game = newGame;
+    } else {
+        console.log({ gameId, createNew })
+
+        let waitingGame = games.find(game => 
+            game.currentGameState === WAITING
+            && !game.id)
+
+        if(waitingGame){
+            game = waitingGame
+            console.log('El segundo jugador de ha unido, comienza el juego...')
+            game.playerOSocket = socket
+            //en vez de hablarle a una sola conxión(jugador), con io. emites a todos los sockets conectados
+            game.playerXSocket.emit('info', `Ya está aquí tu contrincante con Id ${socketId}, comienza la partida... `)
+            game.playerOSocket.emit('info', `Eres el segundo jugador, tu Id es ${socketId} y jugaras contra  el jugador${game.playerXId}, la partida empieza ya...`)
+            game.playerXId = socketId
+                
+            startGame(waitingGame);
+        }else{
+            let newGame = createNewGame();
+            game = newGame
+            console.log('El primer jugador se ha unid, esperando al segundo...')
+            game.playerXSocket = socket
+            game.playerXSocket.emit('info', `Eres el primer jugador, tu ID es ${socketId}, estamos esperando al segundo para dar comienzo a la partida...`)
+            newGame.playerXId = socketId;
+            games.push(game)
+        }
+
     }
 
+    
     socket.on('new move', input  => {
         let {
             playerOMoves, 
